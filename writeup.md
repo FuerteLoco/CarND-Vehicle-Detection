@@ -32,7 +32,7 @@ You're reading it!
 
 #### 1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the Jupyter notebook. I started by reading in all 5966 KITTI vehicle and all 8968 non-vehicle images. I decided to leave out GIT car images since these are time sequenced frames and would need further preparation (shuffling for training / test split is not recommended). Thus there are more non-vehicle images than vehicle images, but overall this gave a better training result.
+The code for this step is contained in the first code cell of the Jupyter notebook. I started by reading in all 8792 vehicle and all 8968 non-vehicle images.
 
 In code cell 2 I then explored different color spaces and different HOG parameters (orientations, pixels_per_cell, and cells_per_block...). I started with an inital parameter set which I've got by exploring color spaces and HOG features with quizzes provided in course material.
 
@@ -76,7 +76,7 @@ I also tried a different approach which was presented as "Hog subsampling". I to
 
 Scales and overlap were determined by exploration of different values. I tried to maximize amount of detected boxes on cars and minimize false positives. In the end I used four different scale values (0.75, 1.0, 1.5 and 2.0) and an overlap of 75%.
 
-I then added a heat map and a thresholding function (code cell 9):
+I then added a heat map and a thresholding function:
 
 ![alt text][image4]
 
@@ -112,11 +112,14 @@ Once again it turned out that my computer is a quite slow machine. Initial param
 
 Therefore I had to take a sliding window algorithm with only a few windows. It's faster, but also not as performant as other algorithms can be. A main drawback is, that there are not so much detection windows. So if a car is slightly off the window, it could happen, that it's also not be recognized be surrounding windows. This is mainly the case for vertical offset, because my algorithm hasn't a vertical overlap feature.
 
-In the beginning of the video there are some detections to the left of the road. I am not sure, if they are false positives or if the cars to the left are detected. Unfortunately I am running out of time, otherwise I could look at heatmap to see, wether it's a strong detection or a weak one.
+~~In the beginning of the video there are some detections to the left of the road. I am not sure, if they are false positives or if the cars to the left are detected. Unfortunately I am running out of time, otherwise I could look at heatmap to see, wether it's a strong detection or a weak one.~~
+
+**UPDATE:** false positives on the left and missed detections of white car on the right were due to a bug in function `color_hist()`: the correct bins range for PNG images is (0, 1), but all the time there was a wrong range of (0, 256). After fixing this and also omitting the two biggest window sizes (planes 0 and 1), the detection performance immediately experienced a huge improvement. Bingo! That was it!
 
 The time spent for lengthy project video processing was missing for other points which could be improved in future:
 
-* Examination of training data: use GTI and Udacity images, compare dataset with project video (I feel a little bit, that they do not really match) and use augmentation (flipping images).
+* Examination of training data: ~~use GTI and Udacity images, compare dataset with project video (I feel a little bit, that they do not really match) and use augmentation (flipping images).~~
+  **UPDATE:** before I found the bug in `color_hist()`, I also cut out all vehicles from Udacity dataset, where aspect ratio was about 1:1, scaled them to 64x64 pixels and used them as additional data (there were more than 25.000 images). Detection performance was slightly better, but still not sufficient. After the bug was fixed, it was absolutely sufficient to use initially provided dataset (including GTI images).
 * Deeper inspection of HOG parameters, maybe there is some exotic combination with better results.
 * Different method for training (now it's just SVC).
 * Better sliding window algorithm: at least vertical overlap, but also HOG subsampling should be added.
